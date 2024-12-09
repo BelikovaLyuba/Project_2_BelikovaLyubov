@@ -6,8 +6,8 @@ api_url = 'https://dataservice.accuweather.com/'
 loc_url = '/locations/v1/cities/geoposition/search'
 api_key = 'UGH2Z3Su53KsHjpz6PT6wcKd5ueF3b77'
 
-latitude = input()
-longitude = input()
+latitude = input('Введите широту: ')
+longitude = input('Введите долготу: ')
 
 loc_key = requests.get(api_url + loc_url,
                        params = {
