@@ -1,39 +1,62 @@
 import requests
-import Flask
-from rich import print
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
 
 api_url = 'https://dataservice.accuweather.com/'
-loc_url = '/locations/v1/cities/geoposition/search'
 api_key = 'UGH2Z3Su53KsHjpz6PT6wcKd5ueF3b77'
 
-latitude = input('Введите широту: ')
-longitude = input('Введите долготу: ')
+def find_loc_key(latitude, longitude):
+    loc_url = '/locations/v1/cities/geoposition/search'
+    loc_key = requests.get(api_url + loc_url,
+                           params={
+                               'q': f'{latitude},{longitude}',
+                               'apikey': api_key
+                           }).json()['Key']
+    return loc_key
 
-loc_key = requests.get(api_url + loc_url,
-                       params = {
-                           'q': f'{latitude},{longitude}',
-                           'apikey': api_key
-                       }).json()['Key']
+def check_bad_weather(temp, wind, rain):
+    if 0 <= temp <= 35 and wind <= 50 and rain <= 70:
+        return False
+    return True
 
-w_url = f'/currentconditions/v1/{loc_key}'
-r_w = requests.get(api_url + w_url, params={'details': 'true',
-                                            'apikey': api_key}).json()
+@app.route('/', methods=['POST', 'GET'])
+def main():
+    if request.method == 'POST':
+        latitude = request.form.get("latitude")
+        longitude = request.form.get("longitude")
 
-rain_url = f'/forecasts/v1/daily/1day/{loc_key}'
-r_rain = requests.get(api_url + rain_url, params={'details': 'true',
-                                               'apikey': api_key}).json()
-print(r_rain)
+        loc_key = find_loc_key(latitude, longitude)
 
-temp = r_w[0]['Temperature']['Metric']['Value']
-print('Температура:', temp, 'C')
+        w_url = f'/currentconditions/v1/{loc_key}'
+        r_w = requests.get(api_url + w_url, params={'details': 'true',
+                                                    'apikey': api_key}).json()
 
-humidity = r_w[0]['RelativeHumidity']
-print('Влажность:', humidity, '%')
+        rain_url = f'/forecasts/v1/daily/1day/{loc_key}'
+        r_rain = requests.get(api_url + rain_url, params={'details': 'true',
+                                                          'apikey': api_key}).json()
 
-wind = r_w[0]['Wind']['Speed']['Metric']['Value']
-print('Скорость ветра:', wind, 'km/h')
+        temp = r_w[0]['Temperature']['Metric']['Value']
 
-rain = r_rain['DailyForecasts'][0]['Day']['RainProbability']
-print('Вероятность дождя:', rain)
+        humidity = r_w[0]['RelativeHumidity']
 
+        wind = r_w[0]['Wind']['Speed']['Metric']['Value']
 
+        rain = r_rain['DailyForecasts'][0]['Day']['RainProbability']
+
+        if check_bad_weather(int(temp), int(wind), int(rain)):
+            result = 'Погода плохая!'
+        else:
+            result = 'Погода хорошая)'
+
+        return (f'Результаты: <br>'
+                f'Температура: {temp} С <br>'
+                f'Влажность: {humidity} % <br>'
+                f'Скорость ветра: {wind} км/ч <br>'
+                f'Вероятность дождя: {rain} % <br>'
+                f'Результат: {result}')
+
+    return render_template('app.html')
+
+if __name__ == '__main__':
+    app.run(host="127.0.0.1", port=5000, debug=True)
