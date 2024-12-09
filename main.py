@@ -4,15 +4,17 @@ from flask import Flask, render_template, request
 app = Flask(__name__)
 
 api_url = 'https://dataservice.accuweather.com/'
-api_key = 'UGH2Z3Su53KsHjpz6PT6wcKd5ueF3b77'
+api_key = 'KRAgAGp4i6q2g5ZnNHkYO8CKWEYLLbNY'
+loc_url = 'locations/v1/cities/geoposition/search'
+city_url = '/locations/v1/cities/search'
 
-def find_loc_key(latitude, longitude):
-    loc_url = '/locations/v1/cities/geoposition/search'
-    loc_key = requests.get(api_url + loc_url,
+def find_loc_key(url, data):
+    loc_key = requests.get(api_url + url,
                            params={
-                               'q': f'{latitude},{longitude}',
+                               'q': data,
                                'apikey': api_key
-                           }).json()['Key']
+                           }).json()
+    print(loc_key)
     return loc_key
 
 def check_bad_weather(temp, wind, rain):
@@ -20,13 +22,16 @@ def check_bad_weather(temp, wind, rain):
         return False
     return True
 
+
 @app.route('/', methods=['POST', 'GET'])
 def main():
     if request.method == 'POST':
-        latitude = request.form.get("latitude")
-        longitude = request.form.get("longitude")
+        # latitude = request.form.get("latitude")
+        # longitude = request.form.get("longitude")
+        # loc_key = find_loc_key(loc_url, f'{latitude},{longitude}')['Key']
 
-        loc_key = find_loc_key(latitude, longitude)
+        city = request.form.get('city')
+        loc_key = find_loc_key(city_url, city)[0]['Key']
 
         w_url = f'/currentconditions/v1/{loc_key}'
         r_w = requests.get(api_url + w_url, params={'details': 'true',
@@ -56,7 +61,8 @@ def main():
                 f'Вероятность дождя: {rain} % <br>'
                 f'Результат: {result}')
 
-    return render_template('app.html')
+    # return render_template('app.html')
+    return render_template('app_city.html')
 
 if __name__ == '__main__':
     app.run(host="127.0.0.1", port=5000, debug=True)
