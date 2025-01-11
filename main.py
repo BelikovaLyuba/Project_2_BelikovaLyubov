@@ -4,7 +4,7 @@ from flask import Flask, render_template, request
 app = Flask(__name__)
 
 api_url = 'https://dataservice.accuweather.com/'
-api_key = 'bCd4AScdlmAAkBxbVo9NJqhhGC3wFdF5'
+api_key = '52BbGz0x6EhWdinl8TncaG9hBNH5Wkip'
 loc_url = 'locations/v1/cities/geoposition/search'
 city_url = 'locations/v1/cities/search'
 
@@ -66,14 +66,14 @@ def main():
         city2 = request.form.get('city2')
         temp2, humidity2, wind2, rain2, result2 = check_city(city2)
 
-        return (f'Город отправления: <br>'
+        return (f'Город отправления: {city1}<br>'
                 f'Температура: {temp1} С <br>'
                 f'Влажность: {humidity1} % <br>'
                 f'Скорость ветра: {wind1} км/ч <br>'
                 f'Вероятность дождя: {rain1} % <br>'
                 f'Результат: {result1}<br>'
                 f'<br>'
-                f'Город прибытия: <br>'
+                f'Город прибытия: {city2}<br>'
                 f'Температура: {temp2} С <br>'
                 f'Влажность: {humidity2} % <br>'
                 f'Скорость ветра: {wind2} км/ч <br>'
